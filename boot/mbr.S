@@ -34,7 +34,7 @@ SECTION MBR vstart=0x7c00
     mov cx, 4                    ;待读入的扇区数 以上传递的参数
     call rd_disk_m_16            ;读取程序的cx扇区 16位模式下读取硬盘
 
-    jmp LOADER_BASE_ADDR         ;MBR跳转到内核加载器的位置，使命完成
+    jmp LOADER_BASE_ADDR + 0x300 ;MBR跳转到内核加载器的位置 (loader_start)，使命完成
 
 ;--------------------------------------------------------------------
 ;功能：读取硬盘的cx个扇区
