@@ -238,7 +238,7 @@ setup_page:
 
 .create_PTE:
 	mov [ebx + esi*4], edx				;ebx = 0x10_1000第一个页表的位置
-	add edx,4096						;edx是从0开始的
+	add edx,4096						;edx是从0开始的额
 	inc esi
 	loop .create_PTE
 
