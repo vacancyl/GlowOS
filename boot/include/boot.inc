@@ -1,9 +1,13 @@
 ;------------------------------------loader 和 kernel-----------------------------
-LOADER_BASE_ADDR equ 0x900                              ;loader 的地址（内核加载器）
+LOADER_BASE_ADDR    equ 0x900                           ;loader 的地址（内核加载器）
 LOADER_START_SECTOR equ 0x2                             ;读取的扇区，以0开始 LBA
-PAGE_DIR_TABLE_POS equ 0x100000                         ;页目录表的物理地址，这是出了低端1MB字节的开始
+PAGE_DIR_TABLE_POS  equ 0x100000                        ;页目录表的物理地址，这是出了低端1MB字节的开始
                                                         ;内核体积大概就是 70KB 以内，内核加载到低端,
                                                         ;mbr loader、操作系统内核都将放置在这 1MB 空间内，当然这山但是指物理内存的0-0xfffff 
+KERNEL_START_SECTOR  equ  0x9
+KERNEL_BIN_BASE_ADDR equ  0x70000
+KERNEL_ENTER_ADDR    equ  0xc0001500
+PT_NULL              equ  0x0
 
 ;--------------------------------------页表的相关属性-----------------------------
 PG_P equ 1b                                             ;存在位
