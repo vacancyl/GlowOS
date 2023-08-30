@@ -11,6 +11,47 @@
 
 #define IDT_DESC_CNT 0x21 // 目前总共支持的中断数
 
+#define EFLAGS_IF 0x00000200 //if位为1
+#define GET_EFLAGS(EFLAGS_VAR) asm volatile("pushfl;popl %0":"=g"(EFLAGS_VAR))
+
+//开中断，返回的是old_status
+enum intr_status intr_enable(void)
+{
+    if(intr_get_status() != INTR_ON)
+    {
+    	asm volatile("sti");
+    	return INTR_OFF;
+    }
+    return INTR_ON;
+}
+
+//关中断
+enum intr_status intr_disable(void)
+{
+    if(intr_get_status() != INTR_OFF)
+    {
+	   	asm volatile("cli");
+	   	return INTR_ON;
+    }
+    return INTR_OFF;
+}
+
+//把中断设置为status的状态
+enum intr_status intr_set_status(enum intr_status status)
+{
+    return (status & INTR_ON) ? intr_enable() : intr_disable();
+}
+
+//获取当前的中断状态
+enum intr_status intr_get_status(void)
+{
+    uint32_t eflags = 0;
+    GET_EFLAGS(eflags);
+    return (eflags & EFLAGS_IF) ? INTR_ON : INTR_OFF; 
+}
+
+
+
 /*中断门描述符结构体*/
 struct gate_desc
 {
@@ -78,7 +119,7 @@ static void make_idt_desc(struct gate_desc *p_gdesc, uint8_t attr, intr_handler 
 static void idt_desc_init(void)
 {
     int i, lastindex = IDT_DESC_CNT - 1;
-    for (i = 0; i < IDT_DESC_CNT; i++)
+    for (i = 0; i <= lastindex; i++)
     {
         make_idt_desc(&idt[i], IDT_DESC_ATTR_DPL0, intr_entry_table[i]);
     }

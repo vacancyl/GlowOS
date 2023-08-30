@@ -1,11 +1,17 @@
 #include "print.h"
 #include "init.h"
+#include "debug.h"
+#include "string.h"
+#include "memory.h"
+
 
 int main(void)
 {
-    put_str("I am kernel\n");
+    put_str("I am kernel1\n");
     init_all();
-    asm volatile("sti");
-    while (1)
-        ;
+    void* addr = get_kernel_pages(3);
+    put_str("\n get_kernel_page start vaddr is ");
+    put_int((uint32_t)addr);
+    put_char('\n');
+    while (1);
 }
