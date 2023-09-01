@@ -145,14 +145,14 @@ put_char:
        
 .is_backspace:
     cmp bx,0                   ;如果bx = 0 则没有办法退格了
-    je  .set_cursor              
+    je  set_cursor              
     
     dec bx                     ;光标位置退1
     shl bx,1                   ;x2 一个字符占两个字节 一个字节是属性 一个字节ascii 
     
     mov word [gs:bx],0x0720    ;低字节ascii 32 ascii表示空字符 7 高字符属性空
     shr bx,1                   ;退回原来的位置
-    jmp .set_cursor            ;交给硬件去处理光标位置
+    jmp set_cursor            ;交给硬件去处理光标位置
     
 .put_other_char:
     shl bx,1                   
@@ -162,7 +162,7 @@ put_char:
     inc bx
     shr bx,1
     cmp bx,2000                ;没到边界2000即跳转
-    jl  .set_cursor            ;没有的话 继续往下进行
+    jl  set_cursor            ;没有的话 继续往下进行
                                ;如果到了两千，执行下面的，因为也是要换行的
                                
 .is_line_feed:   
@@ -177,7 +177,7 @@ put_char:
     add bx,80                   ;一共一页2000 共25行 2000/25=80 则向bx增加80
     cmp bx,2000            
 .is_line_feed_end:              ;若是LF\n 光标移80
-    jl .set_cursor              ;<2000跳转，否则继续执行，进行滚屏
+    jl set_cursor              ;<2000跳转，否则继续执行，进行滚屏
     
 .roll_screen:
     cld                         ;从低到高移动,向高地址移动
@@ -197,8 +197,9 @@ put_char:
     loop .cls
 
     mov ebx,1920                ;光标设置到1920最后一行的首字符
-    
-.set_cursor:
+
+global set_cursor
+set_cursor:
     mov dx,0x3D4                ;高8位
     mov al,0x0e
     out dx,al

@@ -11,46 +11,44 @@
 
 #define IDT_DESC_CNT 0x21 // 目前总共支持的中断数
 
-#define EFLAGS_IF 0x00000200 //if位为1
-#define GET_EFLAGS(EFLAGS_VAR) asm volatile("pushfl;popl %0":"=g"(EFLAGS_VAR))
+#define EFLAGS_IF 0x00000200 // if位为1
+#define GET_EFLAGS(EFLAGS_VAR) asm volatile("pushfl;popl %0" : "=g"(EFLAGS_VAR))
 
-//开中断，返回的是old_status
+// 开中断，返回的是old_status
 enum intr_status intr_enable(void)
 {
-    if(intr_get_status() != INTR_ON)
+    if (intr_get_status() != INTR_ON)
     {
-    	asm volatile("sti");
-    	return INTR_OFF;
+        asm volatile("sti");
+        return INTR_OFF;
     }
     return INTR_ON;
 }
 
-//关中断
+// 关中断
 enum intr_status intr_disable(void)
 {
-    if(intr_get_status() != INTR_OFF)
+    if (intr_get_status() != INTR_OFF)
     {
-	   	asm volatile("cli");
-	   	return INTR_ON;
+        asm volatile("cli");
+        return INTR_ON;
     }
     return INTR_OFF;
 }
 
-//把中断设置为status的状态
+// 把中断设置为status的状态
 enum intr_status intr_set_status(enum intr_status status)
 {
-    return (status & INTR_ON) ? intr_enable() : intr_disable();
+    return (status == INTR_ON) ? intr_enable() : intr_disable();
 }
 
-//获取当前的中断状态
+// 获取当前的中断状态
 enum intr_status intr_get_status(void)
 {
     uint32_t eflags = 0;
     GET_EFLAGS(eflags);
-    return (eflags & EFLAGS_IF) ? INTR_ON : INTR_OFF; 
+    return (eflags & EFLAGS_IF) ? INTR_ON : INTR_OFF;
 }
-
-
 
 /*中断门描述符结构体*/
 struct gate_desc
@@ -65,6 +63,7 @@ struct gate_desc
 // 静态函数声明,非必须
 static void make_idt_desc(struct gate_desc *p_gdesc, uint8_t attr, intr_handler function);
 static struct gate_desc idt[IDT_DESC_CNT]; // idt是中断描述符表,本质上就是个中断门描述符数组
+void register_handler(uint8_t vec_no, intr_handler function);
 
 char *intr_name[IDT_DESC_CNT]; // 用于保存异常的名字
 
@@ -135,9 +134,26 @@ static void general_intr_handler(uint8_t vec_nr)
     {           // 0x2f是从片8259A上的最后一个irq引脚，保留
         return; // IRQ7和IRQ15会产生伪中断(spurious interrupt),无须处理。
     }
-    put_str("int vector : 0x");
-    put_int(vec_nr);
-    put_char('\n');
+    set_cursor(0); // 光标设置在0号位
+    int cursor_pos = 0;
+    while ((cursor_pos++) < 320) // 一行80字 4行空格
+        put_char(' ');
+
+    set_cursor(0);
+    put_str("!!!!!!            excetion message begin            !!!!!!\n");
+    set_cursor(88);             // 第二行第八个字开始打印
+    put_str(intr_name[vec_nr]); // 打印中断向量号
+    if (vec_nr == 14)
+    {
+        int page_fault_vaddr = 0;
+        asm("movl %%cr2,%0" : "=r"(page_fault_vaddr)); // 把虚拟地址 出错的放到了这个变量里面
+        put_str("\npage fault addr is ");
+        put_int(page_fault_vaddr);
+    }
+    put_str("!!!!!!            excetion message end              !!!!!!\n");
+
+    while (1)
+        ; // 悬停
 }
 
 /* 完成一般中断处理函数注册及异常名称注册 */
@@ -173,6 +189,12 @@ static void exception_init(void)
     intr_name[17] = "#AC Alignment Check Exception";
     intr_name[18] = "#MC Machine-Check Exception";
     intr_name[19] = "#XF SIMD Floating-Point Exception";
+}
+
+void register_handler(uint8_t vec_no, intr_handler function)
+{
+    // 把相关向量号的注册函数指针放进去了
+    idt_table[vec_no] = function;
 }
 
 /*完成有关中断的所有初始化工作*/

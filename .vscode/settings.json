@@ -1,5 +1,9 @@
 {
     "files.associations": {
-        "interrupt.h": "c"
+        "interrupt.h": "c",
+        "functional": "c",
+        "typeinfo": "c",
+        "thread.h": "c",
+        "stdint.h": "c"
     }
 }
