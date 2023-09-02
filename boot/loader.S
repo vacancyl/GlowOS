@@ -251,7 +251,7 @@ setup_page:
 
 
 ;创建页表项（PTE）							
-	mov ecx, 256						;1M低端内存/4K = 256,这里只用到了1MB空间，用到的是第0个页目录项，一共是4MB
+	mov ecx, 256						;1M低端内存/4K = 256页表项,这里只用到了1MB空间，用到的是第0个页目录项，一共是4MB
 	mov esi, 0
 	mov edx, PG_US_U | PG_RW_W |PG_P	;属性为7，US=1，RW=1，P=1
 

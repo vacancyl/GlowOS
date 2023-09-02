@@ -4,6 +4,7 @@
         "functional": "c",
         "typeinfo": "c",
         "thread.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "string.h": "c"
     }
 }

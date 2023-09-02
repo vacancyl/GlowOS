@@ -9,7 +9,7 @@
 
 
 
-#define PG_SIZE 4096
+
 
 struct task_struct* main_thread;                        //主线程main_thread的pcb
 struct list thread_ready_list;			  //就绪队列

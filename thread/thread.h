@@ -2,9 +2,11 @@
 #define __THREAD_THREAD_H
 #include "stdint.h"
 #include "list.h"
+#include "memory.h"
+
 /*自定义通用函数类型，它将在很多线程函数中作为形参类型*/
 typedef void thread_func(void*);
-
+#define PG_SIZE 4096
 /*进程的状态*/                  
 enum task_status
 {
@@ -106,7 +108,7 @@ struct task_struct
     struct list_elem all_list_tag;		      //全部线程队列的连接节点
     
     uint32_t* pgdir;				      //进程自己页表的虚拟地址 线程没有          
-
+    struct virtual_addr userprog_vaddr;    //用户进程块的虚拟地址块
     uint32_t stack_magic;			      //越界检查  因为我们pcb上面的就是我们要用的栈了 到时候还要越界检查
 };
 
