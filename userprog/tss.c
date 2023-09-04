@@ -41,7 +41,7 @@ static struct tss tss;
 //内核栈都是位于 pcb头顶一页的地方 这个栈是用户进入内核态用的栈
 void updata_tss_esp(struct task_struct* pthread)
 {
-    tss.esp0 = (uint32_t*)((uint32_t)pthread + PG_SIZE);
+    tss.esp0 = (uint32_t*)((uint32_t)pthread + PG_SIZE);//头部是kstack
 }
 
 //返回生成的描述符

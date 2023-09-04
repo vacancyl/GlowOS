@@ -5,6 +5,15 @@
         "typeinfo": "c",
         "thread.h": "c",
         "stdint.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "memory.h": "c",
+        "syscall.h": "c",
+        "ratio": "c",
+        "system_error": "c",
+        "array": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "list.h": "c"
     }
 }

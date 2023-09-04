@@ -6,8 +6,8 @@
 #include "debug.h"
 #include "interrupt.h"
 #include "print.h"
-
-
+#include "process.h"
+#include "sync.h"
 
 
 
@@ -17,6 +17,18 @@ struct list thread_all_list;				  //总线程队列
 static struct list_elem* thread_tag;    //保存队列中的线程结点 将tag转换成list_elem
 
 extern void switch_to(struct task_struct* cur,struct task_struct* next);
+
+struct lock pid_lock;
+
+
+pid_t allocate_pid(void)
+{
+    static pid_t next_pid = 0;			  
+    lock_acquire(&pid_lock);
+    next_pid++;
+    lock_release(&pid_lock);
+    return next_pid;
+}
 
 /*返回PCB地址此取 当前栈指针的高 20 位作为当前运行线程的 PCB 4KB*/
 struct task_struct* running_thread(void)
@@ -51,6 +63,8 @@ void thread_create(struct task_struct *pthread, thread_func function, void *func
 void init_thread(struct task_struct *pthread, char *name, int prio)
 {
     memset(pthread, 0, sizeof(*pthread)); // pcb位置清0
+    
+    pthread->pid = allocate_pid();
     strcpy(pthread->name, name);
 
     if(pthread == main_thread)
@@ -131,6 +145,8 @@ void schedule(void)
     
     struct task_struct* next = elem2entry(struct task_struct,general_tag,thread_tag);
     next->status = TASK_RUNNING;
+    process_activate(next);
+
     switch_to(cur,next);                                              //esp头顶的是 返回地址 +12是next +8是cur
 }
 
@@ -139,6 +155,7 @@ void thread_init(void)
     put_str("thread_init start!\n");
     list_init(&thread_ready_list);
     list_init(&thread_all_list);
+    lock_init(&pid_lock);   
     make_main_thread();
     put_str("thread_init done!\n");
 }

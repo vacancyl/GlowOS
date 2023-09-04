@@ -3,7 +3,7 @@ section .text
 global switch_to
 switch_to:
     ;备份当前线程环境
-    push esi            ;这里是根据ABI原则保护四个寄存器 放到栈里面
+    push esi            ;这里是根据ABI原则保护四个寄存器 放到栈里面 下一次被调度的时候恢复
     push edi
     push ebx
     push ebp

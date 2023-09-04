@@ -1,23 +1,22 @@
+#include "timer.h"
 #include "io.h"
 #include "print.h"
-#include "interrupt.h"
-#include "thread.h"
+#include "../kernel/interrupt.h"
+#include "../thread/thread.h"
 #include "debug.h"
 
-#define IRQ0_FREQUENCY 	    100                                 //中断频率
-#define INPUT_FREQUENCY     1193180
+
+#define IRQ0_FREQUENCY 	100
+#define INPUT_FREQUENCY        1193180
 #define COUNTER0_VALUE		INPUT_FREQUENCY / IRQ0_FREQUENCY
-#define COUNTER0_PORT		0X40                                //计数器端口
-#define COUNTER0_NO 		0                                   //使用的计数器的序号
-#define COUNTER_MODE		2                                   //计数器工作方式
-#define READ_WRITE_LATCH	3                                   //读写方式
+#define COUNTER0_PORT		0X40
+#define COUNTER0_NO 		0
+#define COUNTER_MODE		2
+#define READ_WRITE_LATCH	3
 #define PIT_COUNTROL_PORT	0x43
 
-uint32_t ticks;//内核自从中断开始的所有的滴答数
-
-void frequency_set(uint8_t counter_port ,uint8_t counter_no,uint8_t rwl,uint8_t counter_mode,uint16_t counter_value);
-void timer_init(void);
-void intr_timer_handler(void);
+//自中断开启以来总的滴答数
+uint32_t ticks;
 
 void frequency_set(uint8_t counter_port ,uint8_t counter_no,uint8_t rwl,uint8_t counter_mode,uint16_t counter_value)
 {
@@ -32,10 +31,9 @@ void intr_timer_handler(void)
     struct task_struct* cur_thread = running_thread();   //得到pcb指针
     ASSERT(cur_thread->stack_magic == 0x19870916);	       //检测栈是否溢出
     
-    //先检测的是主线程的时间片
     ++ticks;
     ++cur_thread->elapsed_ticks;
-    if(0 == cur_thread->ticks)//若进程时间片用完，就开始调度新的进程上 cpu
+    if(!cur_thread->ticks)
     	schedule();
     else    
     	--cur_thread->ticks;
@@ -50,3 +48,4 @@ void timer_init(void)
     put_str("timer_init done!\n");
     return;
 }
+

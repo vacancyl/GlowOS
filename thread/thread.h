@@ -7,6 +7,9 @@
 /*自定义通用函数类型，它将在很多线程函数中作为形参类型*/
 typedef void thread_func(void*);
 #define PG_SIZE 4096
+
+typedef int16_t pid_t;
+
 /*进程的状态*/                  
 enum task_status
 {
@@ -96,6 +99,7 @@ struct thread_stack//难道这里是按照顺序往下的
 struct task_struct
 {
     uint32_t* self_kstack;                          //pcb中的 kernel_stack 内核栈
+    pid_t pid;                          //线程号
     enum task_status status;                        //线程状态
     uint8_t priority;				      //特权级
     char name[16];                        //线程的名字
@@ -109,9 +113,14 @@ struct task_struct
     
     uint32_t* pgdir;				      //进程自己页表的虚拟地址 线程没有          
     struct virtual_addr userprog_vaddr;    //用户进程块的虚拟地址块
+    struct mem_block_desc u_block_desc[DESC_CNT];   //内存块描述符
     uint32_t stack_magic;			      //越界检查  因为我们pcb上面的就是我们要用的栈了 到时候还要越界检查
 };
 
+extern struct list thread_ready_list,thread_all_list;
+
+
+pid_t allocate_pid(void);
 void kernel_thread(thread_func* function,void* func_arg);
 void thread_create(struct task_struct* pthread,thread_func function,void* func_arg);
 void init_thread(struct task_struct* pthread,char* name,int prio);

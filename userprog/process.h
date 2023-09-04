@@ -1,7 +1,7 @@
 #ifndef __USERPROG__PROCESS_H
 #define __USERPROG__PROCESS_H
 
-#define USER_VADDR_START 0x8048000
+
 #include "tss.h"
 #include "string.h"
 #include "global.h"
@@ -11,6 +11,10 @@
 #include "interrupt.h"
 #include "debug.h"
 #include "console.h"
+#include "memory.h"
+
+#define USER_VADDR_START 0x8048000 //这是 Linux 用户程序入口地址，您可以用 readelf 命令查看一下，大部分可执行程序的“En point address ”都是在 Ox8048000 附近。
+
 
 extern void intr_exit(void);
 

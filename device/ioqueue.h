@@ -4,9 +4,10 @@
 #include "stdint.h"
 #include "thread.h"
 #include "sync.h"
+#include "global.h"
 
 #define bufsize 64
-#define NULL 0
+
 
 struct ioqueue
 {
