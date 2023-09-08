@@ -25,9 +25,9 @@ uint32_t getpid(void)
     return _syscall0(SYS_GETPID);
 }
 
-void write(char* str)
+void write(uint32_t fd,const void* buf,uint32_t count)
 {
-    return _syscall1(SYS_WRITE,str);
+    return _syscall3(SYS_WRITE,fd,buf,count);
 }
 
 void* malloc(uint32_t size)

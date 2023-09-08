@@ -3,14 +3,6 @@
 #include "string.h"
 #include "syscall.h"
 
-//ap指向第一个固定参数v ap和v都是char*,这里强制转换
-#define va_start(ap,v) ap = (va_list)&v         
-
-//ap指向下一个参数并返回其值
-#define va_arg(ap,t)   *((t*)(ap +=4))	        
-
-//清除ap
-#define va_end(ap)	   ap = NULL                
 
 /*
 在函数实现中要将转换后的字符写到缓冲区指针指向的缓冲区中的1个或多个位置， 这取决于进制转换后的数值的位数，
@@ -93,6 +85,16 @@ uint32_t printf(const char* format, ...)
     char buf[1024] = {0};
     retval = vsprintf(buf,format,args);
     va_end(args);
-    write(buf);
+    write(1,buf,strlen(buf));
+    return retval;
+}
+
+uint32_t sprintf(char* _des,const char* format, ...)
+{
+    va_list args;
+    uint32_t retval;
+    va_start(args,format);		//args指向char* 的指针 方便指向下一个栈参数
+    retval = vsprintf(_des,format,args);
+    va_end(args);
     return retval;
 }

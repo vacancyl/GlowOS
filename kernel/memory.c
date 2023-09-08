@@ -333,7 +333,7 @@ struct arena *block2arena(struct mem_block *b)
     return (struct arena *)((uint32_t)b & 0xfffff000);
 }
 
-// 申请的字节数
+// 申请的字节数 全部设为0
 void *sys_malloc(uint32_t size)
 {
     enum pool_flags PF;

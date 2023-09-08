@@ -12,6 +12,7 @@
 
 
 struct task_struct* main_thread;                        //主线程main_thread的pcb
+struct task_struct* idle_thread;			  //休眠线程 空线程
 struct list thread_ready_list;			  //就绪队列
 struct list thread_all_list;				  //总线程队列
 static struct list_elem* thread_tag;    //保存队列中的线程结点 将tag转换成list_elem
@@ -78,6 +79,20 @@ void init_thread(struct task_struct *pthread, char *name, int prio)
     pthread->pgdir = NULL;
     pthread->self_kstack = (uint32_t *)((uint32_t)pthread + PG_SIZE); // 刚开始的位置是最低位置 栈顶位置+一页 高地址向低地址扩展的
     pthread->stack_magic = 0x19870916;                                // 设置的魔数 检测是否越界限
+    pthread->cwd_inode_nr = 0;                                        //默认根目录
+
+    //预留标准输出输入出错
+    pthread->fd_table[0] = 0;
+    pthread->fd_table[1] = 1;
+    pthread->fd_table[2] = 2;
+
+    //其余的全部设置为-1
+    uint8_t fd_idx = 3;
+    while(fd_idx < MAX_FILES_OPEN_PER_PROC)
+    {
+        pthread->fd_table[fd_idx] = -1;
+        fd_idx++;
+    }
 }
 /*
 struct list elem 类型中只有两个指针
@@ -139,6 +154,10 @@ void schedule(void)
 不需要将其加入队列，因为当前线程不在就绪队列中*/
     }
     
+    //没有任务运行，就唤醒
+    if(list_empty(&thread_ready_list))
+    	thread_unblock(idle_thread);
+
     ASSERT(!list_empty(&thread_ready_list));
     //从就绪队列弹出
     struct task_struct* thread_tag = list_pop(&thread_ready_list);
@@ -157,8 +176,38 @@ void thread_init(void)
     list_init(&thread_all_list);
     lock_init(&pid_lock);   
     make_main_thread();
+
+    //创建idle线程
+    idle_thread = thread_start("idle",10,idle,NULL);
+
     put_str("thread_init done!\n");
 }
+
+//系统空闲时候运行的线程
+void idle(void)
+{
+    while(1)
+    {
+    	thread_block(TASK_BLOCKED);	//先阻塞后 被唤醒之后即通过命令hlt 使cpu挂起 直到外部中断cpu恢复
+        //hlt需要开中断
+    	asm volatile ("sti;hlt" : : :"memory");
+    }
+}
+
+//让出CPU换其他的线程运行
+void thread_yield(void)
+{
+    struct task_struct* cur = running_thread();
+    enum intr_status old_status = intr_disable();
+    ASSERT(!elem_find(&thread_ready_list,&cur->general_tag));
+    list_append(&thread_ready_list,&cur->general_tag);	//放到就绪队列末尾
+    cur->status = TASK_READY;					//状态设置为READY 可被调度
+    schedule();						
+    intr_set_status(old_status);
+}
+
+
+
 
 /************************************阻塞和唤醒*******************************************/
 void thread_block(enum task_status stat)

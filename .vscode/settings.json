@@ -14,6 +14,9 @@
         "tuple": "c",
         "type_traits": "c",
         "utility": "c",
-        "list.h": "c"
+        "list.h": "c",
+        "stdio.h": "c",
+        "syscall-init.h": "c",
+        "sync.h": "c"
     }
 }

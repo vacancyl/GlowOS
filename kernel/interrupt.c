@@ -4,7 +4,6 @@
 #include "io.h"
 #include "print.h"
 
-
 #define PIC_M_CTRL 0x20 // 这里用的可编程中断控制器是8259A,主片的控制端口是0x20
 #define PIC_M_DATA 0x21 // 主片的数据端口是0x21
 #define PIC_S_CTRL 0xa0 // 从片的控制端口是0xa0
@@ -15,8 +14,7 @@
 #define EFLAGS_IF 0x00000200 // if位为1
 #define GET_EFLAGS(EFLAGS_VAR) asm volatile("pushfl;popl %0" : "=g"(EFLAGS_VAR))
 
-
-extern uint32_t syscall_handler(void); 
+extern uint32_t syscall_handler(void);
 
 // 开中断，返回的是old_status
 enum intr_status intr_enable(void)
@@ -102,10 +100,20 @@ static void pic_init(void)
     OCW1是写入主、从片的奇地址端口，即主片的0x21端口 (PIC_M_DATA)和从片的0xA1端口(PIC_S_DATA)。
 
     */
-    //outb(PIC_M_DATA, 0xfd); //键盘中断
-    //outb(PIC_M_DATA, 0xfe); //时钟中断
-    outb(PIC_M_DATA, 0xfc); //时钟和键盘中断
-    outb(PIC_S_DATA, 0xff);
+    // outb(PIC_M_DATA, 0xfd); //键盘中断
+    // outb(PIC_M_DATA, 0xfe); //时钟中断
+    // outb(PIC_M_DATA, 0xfc); //时钟和键盘中断
+    // outb(PIC_S_DATA, 0xff);
+
+/*
+IRQ2用于级联从片，必须打开，否则无法响应从片上的中断。
+主片上打开的中断有IRQO 的时钟， IRQ1 的键盘和级联从片的IRQ2,
+其他全部关闭
+*/
+    outb(PIC_M_DATA, 0xf8);
+
+    //打开IRQ14，接受硬盘控制器的中断
+    outb(PIC_S_DATA, 0xbf);
 
     put_str("pic_init done\n");
 }
@@ -130,7 +138,7 @@ static void idt_desc_init(void)
     }
     /* 单独处理系统调用,系统调用对应的中断门dpl为3,
      * 中断处理程序为单独的syscall_handler */
-    make_idt_desc(&idt[lastindex],IDT_DESC_ATTR_DPL3,syscall_handler);
+    make_idt_desc(&idt[lastindex], IDT_DESC_ATTR_DPL3, syscall_handler);
     put_str("idt_desc_init done\n");
 }
 

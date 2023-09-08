@@ -10,6 +10,8 @@ typedef void thread_func(void*);
 
 typedef int16_t pid_t;
 
+#define MAX_FILES_OPEN_PER_PROC 8
+
 /*进程的状态*/                  
 enum task_status
 {
@@ -107,6 +109,7 @@ struct task_struct
     uint8_t ticks;				      //在cpu 运行的滴答数 看ticks 来判断是否用完了时间片
     uint32_t elapsed_ticks;                         //一共执行了多久
 
+    int32_t fd_table[MAX_FILES_OPEN_PER_PROC];//文件描述符数组
     
     struct list_elem general_tag;                   //就绪队列中的连接节点
     struct list_elem all_list_tag;		      //全部线程队列的连接节点
@@ -114,6 +117,7 @@ struct task_struct
     uint32_t* pgdir;				      //进程自己页表的虚拟地址 线程没有          
     struct virtual_addr userprog_vaddr;    //用户进程块的虚拟地址块
     struct mem_block_desc u_block_desc[DESC_CNT];   //内存块描述符
+    uint32_t cwd_inode_nr;                  //进程所在工作目录的inode编号
     uint32_t stack_magic;			      //越界检查  因为我们pcb上面的就是我们要用的栈了 到时候还要越界检查
 };
 
@@ -134,4 +138,6 @@ void schedule(void);
 void thread_init(void);
 void thread_unblock(struct task_struct* pthread);
 void thread_block(enum task_status stat);
+void idle(void);
+void thread_yield(void);
 #endif
