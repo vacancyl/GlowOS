@@ -118,13 +118,14 @@ struct task_struct
     struct virtual_addr userprog_vaddr;    //用户进程块的虚拟地址块
     struct mem_block_desc u_block_desc[DESC_CNT];   //内存块描述符
     uint32_t cwd_inode_nr;                  //进程所在工作目录的inode编号
+    int16_t parent_pid;
     uint32_t stack_magic;			      //越界检查  因为我们pcb上面的就是我们要用的栈了 到时候还要越界检查
 };
 
 extern struct list thread_ready_list,thread_all_list;
 
 
-pid_t allocate_pid(void);
+static pid_t allocate_pid(void);
 void kernel_thread(thread_func* function,void* func_arg);
 void thread_create(struct task_struct* pthread,thread_func function,void* func_arg);
 void init_thread(struct task_struct* pthread,char* name,int prio);
@@ -140,4 +141,6 @@ void thread_unblock(struct task_struct* pthread);
 void thread_block(enum task_status stat);
 void idle(void);
 void thread_yield(void);
+pid_t fork_pid(void);
+void sys_ps(void);
 #endif

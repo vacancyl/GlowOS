@@ -189,14 +189,13 @@ put_char:
     
     mov ebx,3840                ;最后一行80*2 = 160 偏移：4000-160 = 3840 最后一行清除了
     mov ecx,80
-             
-    
-.cls:   
-    mov word [gs:ebx],0x0720    ;0x07 0x20 黑底白字属性 空字符
-    add ebx, 2    
-    loop .cls
 
-    mov ebx,1920                ;光标设置到1920最后一行的首字符
+.cls:
+    mov word [gs:ebx], 0x0720		  ;0x0720是黑底白字的空格键
+    add ebx, 2
+    loop .cls 
+    mov bx,1920				  ;将光标值重置为1920,最后一行的首字符.
+
 
 global set_cursor
 set_cursor:
@@ -217,3 +216,22 @@ set_cursor:
 .put_char_done:
     popad                        ;把之前全部储存的给pop出来 还原现场
     ret
+    
+
+global cls_screen
+cls_screen:                              
+   pushad                                ; 用户态不允许访问显存 只能由中断后进入内核态 故此为系统调用 每次进入都会把gs设置为0，所以这里要重新赋值
+   mov ax,SELECTOR_VIDEO                 ; ax做中转
+   mov gs,ax                             ; 先放到gs里面 进入中断后再
+   
+   mov ebx,0
+   mov ecx,80*25                         ;清屏幕
+   
+
+.cls:   
+    mov word [gs:ebx],0x0720    ;0x07 0x20 黑底白字属性 空字符
+    add ebx, 2    
+    loop .cls
+
+    mov ebx,0                
+    jmp set_cursor

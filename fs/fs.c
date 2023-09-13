@@ -9,6 +9,7 @@
 #include "list.h"
 #include "file.h"
 #include "super_block.h"
+#include "keyboard.h"
 
 struct partition *cur_part; // 默认操作分区
 
@@ -235,7 +236,7 @@ void filesys_init(void)
     sys_free(sb_buf);
     char default_part[8] = "sdb1"; // 参数为int 4字节字符串指针传的进去
     list_traversal(&partition_list, mount_partition, (int)default_part);
-    print_sdb_info(cur_part);
+    //print_sdb_info(cur_part);
 
     open_root_dir(cur_part);//打开当前分区的根目录
 
@@ -464,14 +465,30 @@ int32_t sys_write(int32_t fd,const void* buf,uint32_t count)
 //从文件描述符fd中读取count个字节到buf成功返回读取的字节数 到文件尾返回-1
 int32_t sys_read(int32_t fd,void* buf,uint32_t count)
 {
-    if(fd < 0)
+    int ret = -1;
+    if(fd < 0 || fd == stdout_no || fd == stderr_no)
     {
     	printk("sys_read: fd error\n");
     	return -1;
     }
-    ASSERT(buf != NULL);
-    uint32_t _fd = fd_local2global(fd);
-    return file_read(&file_table[_fd],buf,count);
+    else if(fd == stdin_no)
+    {
+        char* buffer = buf;
+        uint32_t bytes_read = 0;
+        while(bytes_read < count)
+        {
+            *buffer = ioq_getchar(&kb_buf);
+            ++bytes_read;
+            ++buffer;
+        }
+        ret = (bytes_read == 0) ? -1 : (int32_t)bytes_read;
+    }
+    else
+    {
+        uint32_t _fd = fd_local2global(fd);
+        ret = file_read(&file_table[_fd],buf,count);
+    }   
+    return ret;
 }
 
 

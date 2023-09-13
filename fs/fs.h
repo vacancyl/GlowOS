@@ -70,4 +70,10 @@ int32_t sys_unlink(const char* pathname);
 int32_t sys_mkdir(const char* pathname);
 char* sys_getcwd(char* buf,uint32_t size);
 int32_t sys_chdir(const char* path);
+int32_t sys_closedir(struct dir* dir);
+struct dir* sys_opendir(const char* name);
+struct dir_entry* sys_readdir(struct dir* dir);
+void sys_rewinddir(struct dir* dir);
+int32_t sys_rmdir(const char* pathname);
+int32_t sys_stat(const char* path,struct stat* buf);
 #endif

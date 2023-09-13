@@ -1,7 +1,7 @@
 #ifndef __LIB__STDIO_H
 #define __LIB__STDIO_H
 #include "stdint.h"
-#include "global.h"
+
 
 typedef void* va_list;
 
@@ -12,7 +12,7 @@ typedef void* va_list;
 #define va_arg(ap,t)   *((t*)(ap +=4))	        
 
 //清除ap
-#define va_end(ap)	   ap = NULL                
+#define va_end(ap)	   ap = ((void*)0)                
 
 
 void itoa(uint32_t value,char** buf_ptr_addr,uint8_t base);

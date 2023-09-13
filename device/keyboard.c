@@ -172,16 +172,17 @@ void intr_keyboard_handler(void)
         
         char cur_char = keymap[index][shift];
 
+        if((ctrl_down_last && cur_char == 'l') || (ctrl_down_last && cur_char == 'u'))
+            cur_char -= 'a';
+
         //控制字符不可见为0
         if(cur_char)
         {
             if(!ioq_full(&kb_buf))
             {
-                put_char(cur_char);
                 ioq_putchar(&kb_buf,cur_char);
             }
         		
-        	
 	    	return;
 	    }
 

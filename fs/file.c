@@ -27,7 +27,7 @@ uint32_t get_free_slot_in_global(void)
 
     if (fd_idx == MAX_FILE_OPEN)
     {
-        printk("exceed max open files\n");
+        printk("exceed max open files1\n");
         return -1;
     }
 
@@ -51,7 +51,7 @@ uint32_t pcb_fd_install(int32_t global_fd_idx)
 
     if (local_fd_idx == MAX_FILES_OPEN_PER_PROC)
     {
-        printk("exceed max open files\n");
+        printk("exceed max open files2\n");
         return -1;
     }
     return local_fd_idx; // 也就是安装到哪
@@ -133,7 +133,7 @@ int32_t file_create(struct dir *parent_dir, char *filename, uint8_t flag)
     int fd_idx = get_free_slot_in_global();
     if (fd_idx == -1) // file table增加失败
     {
-        printk("exceed max open files\n");
+        printk("exceed max open files3\n");
         rollback_step = 2;
         goto rollback;
     }
@@ -195,7 +195,7 @@ int32_t file_open(uint32_t inode_no,uint8_t flag)
     int fd_idx = get_free_slot_in_global();	//全局描述符表得到idx
     if(fd_idx == -1)
     {
-    	printk("exceed max open files\n");
+    	printk("exceed max open files4\n");
     	return -1;
     }
     file_table[fd_idx].fd_pos = 0;//每次打开都需要设置为0

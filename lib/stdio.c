@@ -2,6 +2,7 @@
 #include "stdint.h"
 #include "string.h"
 #include "syscall.h"
+#include "global.h"
 
 
 /*

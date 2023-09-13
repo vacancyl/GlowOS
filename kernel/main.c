@@ -14,28 +14,33 @@
 #include "stdio-kernel.h"
 #include "file.h"
 #include "fs.h"
-
-void k_thread_a(void *arg);
-void k_thread_b(void *arg);
-void u_prog_a(void);
-void u_prog_b(void);
-int pid_a = 0, pid_b = 0;
+#include "shell.h"
 
 int main(void)
 {
 	put_str("I am kernel\n");
 	init_all();
-
-	// process_execute(u_prog_a, "user_prog_a");
-	// process_execute(u_prog_b, "user_prog_b");
-
 	intr_enable(); // 开中断
-	struct stat stat;
-	sys_stat("/", &stat);
-	printk("/'s info \n    i_no:%d\n    size:%d\n    filetype:%d\n", stat.st_ino, stat.st_size, stat.st_filetype);
-	sys_stat("/dir1", &stat);
-	printk("/dir1's info \n    i_no:%d\n    size:%d\n    filetype:%d\n", stat.st_ino, stat.st_size, stat.st_filetype);
-	
+
+	/*************    写入应用程序    *************/
+	uint32_t file_size = 15340;
+	uint32_t sec_cnt = DIV_ROUND_UP(file_size, 512);//30
+	struct disk *sda = &channels[0].devices[0];
+	void *prog_buf = sys_malloc(file_size);
+	ide_read(sda, 300, prog_buf, sec_cnt);
+	int32_t fd = sys_open("/prog_no_arg", O_CREAT | O_RDWR);
+	if (fd != -1)
+	{
+		if (sys_write(fd, prog_buf, file_size) == -1)
+		{
+			printk("file write error!\n");
+			while (1)
+				;
+		}
+	}
+	/*************    写入应用程序结束   *************/
+	cls_screen();
+	console_put_str("[vacancy@localhost /]$ ");
 
 	while (1)
 		;
@@ -44,80 +49,13 @@ int main(void)
 
 // 这段不能放前面，不然0xc0001500的位置不是主函数
 
-void k_thread_a(void *arg)
+void init(void)
 {
-
-	// 三页 还包括用户进程的页目录表
-	void *addr1 = sys_malloc(256);
-	void *addr2 = sys_malloc(255);
-	void *addr3 = sys_malloc(254);
-	console_put_str("   thread_a malloc addr:0x");
-	console_put_int((int)addr1);
-	console_put_char(',');
-	console_put_int((int)addr2);
-	console_put_char(',');
-	console_put_int((int)addr3);
-	console_put_char('\n');
-	int cpu_delay = 100000;
-	while (cpu_delay-- > 0)
-		;
-	sys_free(addr1);
-	sys_free(addr2);
-	sys_free(addr3);
-	while (1)
-		;
-}
-
-void k_thread_b(void *arg)
-{
-	void *addr1 = sys_malloc(256);
-	void *addr2 = sys_malloc(255);
-	void *addr3 = sys_malloc(254);
-	console_put_str("   thread_b malloc addr:0x");
-	console_put_int((int)addr1);
-	console_put_char(',');
-	console_put_int((int)addr2);
-	console_put_char(',');
-	console_put_int((int)addr3);
-	console_put_char('\n');
-	int cpu_delay = 100000;
-	while (cpu_delay-- > 0)
-		;
-	sys_free(addr1);
-	sys_free(addr2);
-	sys_free(addr3);
-	while (1)
-		;
-}
-
-void u_prog_a(void)
-{
-	void *addr1 = malloc(256);
-	void *addr2 = malloc(255);
-	void *addr3 = malloc(254);
-	printf(" prog_a malloc addr:0x%x, 0x%x, 0x%x\n", (int)addr1, (int)addr2, (int)addr3);
-	int cpu_delay = 100000;
-	while (cpu_delay-- > 0)
-		;
-	free(addr1);
-	free(addr2);
-	free(addr3);
-	while (1)
-		;
-}
-
-void u_prog_b(void)
-{
-	void *addr1 = malloc(256);
-	void *addr2 = malloc(255);
-	void *addr3 = malloc(254);
-	printf(" prog_b malloc addr:0x%x, 0x%x, 0x%x\n", (int)addr1, (int)addr2, (int)addr3);
-	int cpu_delay = 100000;
-	while (cpu_delay-- > 0)
-		;
-	free(addr1);
-	free(addr2);
-	free(addr3);
-	while (1)
-		;
+	uint32_t ret_pid = fork();
+	if (ret_pid)
+		while (1)
+			;
+	else
+		my_shell();
+	PANIC("init: should not be here");
 }
